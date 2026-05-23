@@ -27,7 +27,7 @@ export async function searchVideos(query: string): Promise<VideoResult[]> {
   const res = await fetch(url, { next: { revalidate: 60 } });
   if (!res.ok) throw new Error(`Invidious search failed: ${res.status}`);
   const data = await res.json();
-  return (data as Record<string, unknown>[]).map(normalizeVideo);
+  return (data as Record<string, unknown>[]).map(normalizeVideo).filter((v): v is VideoResult => v !== null);
 }
 
 export async function searchChannels(query: string): Promise<ChannelResult[]> {
@@ -48,7 +48,7 @@ export async function getChannelVideos(channelId: string): Promise<VideoResult[]
     if (!res.ok) return [];
     const data = await res.json() as { videos?: Record<string, unknown>[] } | Record<string, unknown>[];
     const raw = Array.isArray(data) ? data : (data.videos ?? []);
-    const videos = raw.map(normalizeVideo);
+    const videos = raw.map(normalizeVideo).filter((v): v is VideoResult => v !== null);
     channelCache.set(channelId, { videos, ts: Date.now() });
     return videos;
   } catch {
@@ -63,7 +63,7 @@ export async function getChannelVideosPage(channelId: string, page: number): Pro
     if (!res.ok) return [];
     const data = await res.json() as { videos?: Record<string, unknown>[] } | Record<string, unknown>[];
     const raw = Array.isArray(data) ? data : (data.videos ?? []);
-    return raw.map(normalizeVideo);
+    return raw.map(normalizeVideo).filter((v): v is VideoResult => v !== null);
   } catch {
     return [];
   }
@@ -73,18 +73,26 @@ export function embedUrl(videoId: string): string {
   return `${BASE}/embed/${videoId}?autoplay=1&rel=0`;
 }
 
-function normalizeVideo(v: Record<string, unknown>): VideoResult {
+function normalizeVideo(v: Record<string, unknown>): VideoResult | null {
+  const videoId = v.videoId as string | null;
+  const title = (v.title as string | null) ?? "";
+  const channelId = (v.authorId as string | null) ?? "";
+  const channelName = (v.author as string | null) ?? "";
+
+  // Skip entries missing the fields we can't function without
+  if (!videoId || !channelId) return null;
+
   const thumbs = (v.videoThumbnails as { quality: string; url: string }[]) ?? [];
   const thumb =
     thumbs.find((t) => t.quality === "medium")?.url ??
     thumbs[0]?.url ??
     "";
   return {
-    videoId: v.videoId as string,
-    title: v.title as string,
+    videoId,
+    title,
     thumbnail: thumb,
-    channelId: v.authorId as string,
-    channelName: v.author as string,
+    channelId,
+    channelName,
     viewCount: (v.viewCount as number) ?? 0,
     lengthSeconds: (v.lengthSeconds as number) ?? 0,
     publishedText: (v.publishedText as string) ?? "",

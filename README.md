@@ -1,3 +1,5 @@
+> **Built entirely with [Claude Code](https://claude.ai/code)** by Anthropic — 100% AI-generated code, zero human-written lines.
+
 # KidTube
 
 A self-hosted, parent-controlled YouTube front-end for kids. Kids search for videos and request permission to watch them. Parents approve or deny via Telegram. Videos play through an [Invidious](https://invidious.io) instance — no YouTube recommendations, no ads, no rabbit holes.

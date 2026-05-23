@@ -70,15 +70,19 @@ export default function VideoCard({ video: v, subscribedChannels, onSubscribeTog
       <div className="p-3 space-y-2">
         <p className="text-sm font-medium line-clamp-2 leading-snug">{v.title}</p>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-gray-400 truncate flex items-center gap-1">
+          <a
+            href={`/channel/${v.channelId}`}
+            className="text-xs text-gray-400 hover:text-white transition-colors truncate flex items-center gap-1"
+          >
             {v.channelName}
             {v.channelAllowed && (
               <span className="text-green-400 text-[10px] bg-green-400/10 px-1.5 py-0.5 rounded-full shrink-0">
                 Approved
               </span>
             )}
-          </p>
+          </a>
           <button
+            type="button"
             onClick={() => onSubscribeToggle(v.channelId, v.channelName, v.thumbnail, isSubscribed)}
             className={`text-[11px] shrink-0 px-2 py-0.5 rounded-full border transition-colors ${
               isSubscribed
@@ -90,6 +94,7 @@ export default function VideoCard({ video: v, subscribedChannels, onSubscribeTog
           </button>
         </div>
         <button
+          type="button"
           onClick={handleRequest}
           disabled={requesting || !!requestStatus}
           className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${

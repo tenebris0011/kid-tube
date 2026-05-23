@@ -102,9 +102,16 @@ export default function FeedPage() {
         {/* Subscribed channels strip */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-              My Channels
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                My Channels
+              </h2>
+              {subscriptions.length > 0 && (
+                <a href="/subscriptions" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+                  Manage
+                </a>
+              )}
+            </div>
             <button
               onClick={() => { setShowAddChannel((v) => !v); setChannelResults([]); setChannelQuery(""); }}
               className="text-sm text-red-500 hover:text-red-400 transition-colors"

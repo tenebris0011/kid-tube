@@ -97,7 +97,7 @@ export default function VideoCard({ video: v, subscribedChannels, onSubscribeTog
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onSubscribeToggle(v.channelId, v.channelName, v.thumbnail, isSubscribed);
+              onSubscribeToggle(v.channelId, v.channelName ?? "", v.thumbnail ?? "", isSubscribed);
             }}
             className={`text-[11px] shrink-0 px-2 py-1 rounded-full border transition-colors ${
               isSubscribed

@@ -132,13 +132,13 @@ export default function FeedPage() {
                       <Image src={s.channel_thumbnail} alt="" fill className="object-cover" unoptimized />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-600 text-lg">
-                        {s.channel_name[0]}
+                        {s.channel_name?.[0] ?? "?"}
                       </div>
                     )}
                   </div>
-                  <p className="text-[10px] text-gray-400 text-center leading-tight line-clamp-2 w-full">{s.channel_name}</p>
+                  <p className="text-[10px] text-gray-400 text-center leading-tight line-clamp-2 w-full">{s.channel_name ?? ""}</p>
                   <button
-                    onClick={() => handleSubscribeToggle(s.channel_id, s.channel_name, s.channel_thumbnail ?? "", true)}
+                    onClick={() => handleSubscribeToggle(s.channel_id, s.channel_name ?? "", s.channel_thumbnail ?? "", true)}
                     className="text-[10px] text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                   >
                     Unsubscribe

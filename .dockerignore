@@ -1,0 +1,8 @@
+.next
+node_modules
+*.db
+.env
+.env.local
+.env*.local
+README.md
+.git

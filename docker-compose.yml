@@ -1,0 +1,41 @@
+services:
+  telegram-poller:
+    build: .
+    container_name: telegram-poller
+    restart: unless-stopped
+    command: bun run telegram-poller.ts
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      APP_URL: http://kidtube:3000
+    networks:
+      - proxy
+    depends_on:
+      - kidtube
+
+  kidtube:
+    build: .
+    container_name: kidtube
+    restart: unless-stopped
+    environment:
+      INVIDIOUS_URL: ${INVIDIOUS_URL}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_PARENT_CHAT_ID: ${TELEGRAM_PARENT_CHAT_ID}
+      JWT_SECRET: ${JWT_SECRET}
+      DB_PATH: /app/data/kid-tube.db
+    volumes:
+      - kidtube_data:/app/data
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.kidtube.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.kidtube.entrypoints=websecure
+      - traefik.http.routers.kidtube.tls.certresolver=cloudflare
+      - traefik.http.services.kidtube.loadbalancer.server.port=3000
+
+volumes:
+  kidtube_data:
+
+networks:
+  proxy:
+    external: true

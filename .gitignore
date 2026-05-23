@@ -1,0 +1,9 @@
+.next/
+node_modules/
+*.db
+.env
+.env.local
+.env*.local
+letsencrypt/
+.claude/
+tsconfig.tsbuildinfo

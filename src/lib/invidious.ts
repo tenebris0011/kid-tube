@@ -38,35 +38,47 @@ export async function searchChannels(query: string): Promise<ChannelResult[]> {
   return (data as Record<string, unknown>[]).map(normalizeChannel);
 }
 
-export async function getChannelVideos(channelId: string): Promise<VideoResult[]> {
-  const cached = channelCache.get(channelId);
-  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.videos;
-
+async function fetchChannelVideosFromApi(channelId: string, page: number): Promise<VideoResult[]> {
+  // Primary: dedicated channel videos endpoint
   try {
-    const url = `${BASE}/api/v1/channels/${channelId}/videos`;
+    const url = `${BASE}/api/v1/channels/${channelId}/videos?page=${page}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json() as { videos?: Record<string, unknown>[] } | Record<string, unknown>[];
+      const raw = Array.isArray(data) ? data : (data.videos ?? []);
+      const videos = raw
+        .filter((v) => (v as Record<string, unknown>).type !== "parse-error")
+        .map(normalizeVideo)
+        .filter((v): v is VideoResult => v !== null);
+      if (videos.length > 0) return videos;
+    }
+  } catch { /* fall through to search fallback */ }
+
+  // Fallback: search by channelId, filter to this channel only
+  try {
+    const url = `${BASE}/api/v1/search?q=${encodeURIComponent(channelId)}&type=video&page=${page}`;
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return [];
-    const data = await res.json() as { videos?: Record<string, unknown>[] } | Record<string, unknown>[];
-    const raw = Array.isArray(data) ? data : (data.videos ?? []);
-    const videos = raw.map(normalizeVideo).filter((v): v is VideoResult => v !== null);
-    channelCache.set(channelId, { videos, ts: Date.now() });
-    return videos;
+    const data = await res.json() as Record<string, unknown>[];
+    return data
+      .map(normalizeVideo)
+      .filter((v): v is VideoResult => v !== null && v.channelId === channelId);
   } catch {
     return [];
   }
 }
 
+export async function getChannelVideos(channelId: string): Promise<VideoResult[]> {
+  const cached = channelCache.get(channelId);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.videos;
+
+  const videos = await fetchChannelVideosFromApi(channelId, 1);
+  channelCache.set(channelId, { videos, ts: Date.now() });
+  return videos;
+}
+
 export async function getChannelVideosPage(channelId: string, page: number): Promise<VideoResult[]> {
-  try {
-    const url = `${BASE}/api/v1/channels/${channelId}/videos?page=${page}`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return [];
-    const data = await res.json() as { videos?: Record<string, unknown>[] } | Record<string, unknown>[];
-    const raw = Array.isArray(data) ? data : (data.videos ?? []);
-    return raw.map(normalizeVideo).filter((v): v is VideoResult => v !== null);
-  } catch {
-    return [];
-  }
+  return fetchChannelVideosFromApi(channelId, page);
 }
 
 export function embedUrl(videoId: string): string {

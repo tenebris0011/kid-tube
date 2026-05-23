@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -32,26 +33,33 @@ export default function VideoCard({ video: v, subscribedChannels, onSubscribeTog
   const router = useRouter();
   const [requesting, setRequesting] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState(false);
 
   async function handleRequest() {
     setRequesting(true);
-    const res = await fetch("/api/requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        videoId: v.videoId,
-        videoTitle: v.title,
-        videoThumbnail: v.thumbnail,
-        channelId: v.channelId,
-        channelName: v.channelName,
-      }),
-    });
-    const data = await res.json();
-    setRequesting(false);
-    if (data.status === "approved") {
-      router.push(`/watch/${v.videoId}`);
-    } else {
-      setRequestStatus(data.status);
+    setRequestError(false);
+    try {
+      const res = await fetch("/api/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoId: v.videoId,
+          videoTitle: v.title,
+          videoThumbnail: v.thumbnail,
+          channelId: v.channelId,
+          channelName: v.channelName,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === "approved") {
+        router.push(`/watch/${v.videoId}`);
+        return;
+      }
+      setRequestStatus(data.status ?? null);
+    } catch {
+      setRequestError(true);
+    } finally {
+      setRequesting(false);
     }
   }
 
@@ -67,24 +75,31 @@ export default function VideoCard({ video: v, subscribedChannels, onSubscribeTog
           {formatDuration(v.lengthSeconds)}
         </span>
       </div>
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-3">
         <p className="text-sm font-medium line-clamp-2 leading-snug">{v.title}</p>
+
+        {/* Channel row — link and subscribe clearly separated */}
         <div className="flex items-center justify-between gap-2">
-          <a
-            href={`/channel/${v.channelId}`}
-            className="text-xs text-gray-400 hover:text-white transition-colors truncate flex items-center gap-1"
-          >
-            {v.channelName}
+          <div className="flex items-center gap-1 min-w-0">
+            <Link
+              href={`/channel/${v.channelId}`}
+              className="text-xs text-gray-400 hover:text-white transition-colors truncate"
+            >
+              {v.channelName}
+            </Link>
             {v.channelAllowed && (
               <span className="text-green-400 text-[10px] bg-green-400/10 px-1.5 py-0.5 rounded-full shrink-0">
                 Approved
               </span>
             )}
-          </a>
+          </div>
           <button
             type="button"
-            onClick={() => onSubscribeToggle(v.channelId, v.channelName, v.thumbnail, isSubscribed)}
-            className={`text-[11px] shrink-0 px-2 py-0.5 rounded-full border transition-colors ${
+            onClick={(e) => {
+              e.stopPropagation();
+              onSubscribeToggle(v.channelId, v.channelName, v.thumbnail, isSubscribed);
+            }}
+            className={`text-[11px] shrink-0 px-2 py-1 rounded-full border transition-colors ${
               isSubscribed
                 ? "border-gray-600 text-gray-500 hover:border-red-500 hover:text-red-400"
                 : "border-gray-600 text-gray-400 hover:border-white hover:text-white"
@@ -93,12 +108,19 @@ export default function VideoCard({ video: v, subscribedChannels, onSubscribeTog
             {isSubscribed ? "Subscribed" : "+ Subscribe"}
           </button>
         </div>
+
+        {/* Watch / request button — full width, taller touch target */}
         <button
           type="button"
-          onClick={handleRequest}
-          disabled={requesting || !!requestStatus}
-          className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
-            requestStatus === "approved"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRequest();
+          }}
+          disabled={requesting || requestStatus === "pending"}
+          className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            requestError
+              ? "bg-gray-700 text-gray-400"
+              : requestStatus === "approved"
               ? "bg-green-600"
               : requestStatus === "pending"
               ? "bg-yellow-600/80 cursor-default"
@@ -107,6 +129,8 @@ export default function VideoCard({ video: v, subscribedChannels, onSubscribeTog
         >
           {requesting
             ? "…"
+            : requestError
+            ? "Try again"
             : requestStatus === "pending"
             ? "Waiting for approval"
             : requestStatus === "approved"

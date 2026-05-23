@@ -14,6 +14,7 @@ export default function ParentKidsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   async function load() {
     const res = await fetch("/api/kids");
@@ -21,6 +22,12 @@ export default function ParentKidsPage() {
   }
 
   useEffect(() => { load(); }, []);
+
+  async function handleDelete(id: number) {
+    await fetch(`/api/kids/${id}`, { method: "DELETE" });
+    setConfirmDelete(null);
+    setKids((prev) => prev.filter((k) => k.id !== id));
+  }
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -59,9 +66,33 @@ export default function ParentKidsPage() {
             <p className="text-gray-600 text-sm">No kid accounts yet</p>
           )}
           {kids.map((k) => (
-            <div key={k.id} className="bg-gray-900 rounded-xl px-4 py-3 flex items-center">
-              <span className="text-2xl mr-3">👦</span>
-              <p className="font-medium">{k.username}</p>
+            <div key={k.id} className="bg-gray-900 rounded-xl px-4 py-3 flex items-center gap-3">
+              <span className="text-2xl">👦</span>
+              <p className="font-medium flex-1">{k.username}</p>
+              {confirmDelete === k.id ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">Delete account?</span>
+                  <button
+                    onClick={() => handleDelete(k.id)}
+                    className="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Yes, delete
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(null)}
+                    className="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDelete(k.id)}
+                  className="text-gray-500 hover:text-red-400 text-sm transition-colors px-2"
+                >
+                  Delete
+                </button>
+              )}
             </div>
           ))}
         </div>

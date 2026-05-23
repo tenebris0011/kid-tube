@@ -33,6 +33,13 @@ export default function ParentRequestsPage() {
     );
   }
 
+  async function revoke(id: number) {
+    await fetch(`/api/requests/${id}/revoke`, { method: "POST" });
+    setRequests((prev) =>
+      prev.map((r) => r.id === id ? { ...r, status: "denied" } : r)
+    );
+  }
+
   const filtered = filter === "pending" ? requests.filter((r) => r.status === "pending") : requests;
 
   return (
@@ -82,10 +89,18 @@ export default function ParentRequestsPage() {
                   Deny
                 </button>
               </div>
+            ) : r.status === "approved" ? (
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span className="text-xs font-semibold text-green-400">Approved</span>
+                <button
+                  onClick={() => revoke(r.id)}
+                  className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+                >
+                  Revoke
+                </button>
+              </div>
             ) : (
-              <span className={`text-xs font-semibold shrink-0 ${r.status === "approved" ? "text-green-400" : "text-red-400"}`}>
-                {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-              </span>
+              <span className="text-xs font-semibold shrink-0 text-red-400">Denied</span>
             )}
           </div>
         ))}

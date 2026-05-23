@@ -1,5 +1,8 @@
 const BASE = process.env.INVIDIOUS_URL ?? "http://localhost:3000";
 
+const channelCache = new Map<string, { videos: VideoResult[]; ts: number }>();
+const CACHE_TTL = 5 * 60 * 1000;
+
 export interface VideoResult {
   videoId: string;
   title: string;
@@ -9,6 +12,7 @@ export interface VideoResult {
   viewCount: number;
   lengthSeconds: number;
   publishedText: string;
+  published: number;
 }
 
 export interface ChannelResult {
@@ -34,6 +38,19 @@ export async function searchChannels(query: string): Promise<ChannelResult[]> {
   return (data as Record<string, unknown>[]).map(normalizeChannel);
 }
 
+export async function getChannelVideos(channelId: string): Promise<VideoResult[]> {
+  const cached = channelCache.get(channelId);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.videos;
+
+  const url = `${BASE}/api/v1/channels/${channelId}/videos?fields=videos`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) return [];
+  const data = await res.json() as { videos?: Record<string, unknown>[] };
+  const videos = (data.videos ?? []).map(normalizeVideo);
+  channelCache.set(channelId, { videos, ts: Date.now() });
+  return videos;
+}
+
 export function embedUrl(videoId: string): string {
   return `${BASE}/embed/${videoId}?autoplay=1&rel=0`;
 }
@@ -53,6 +70,7 @@ function normalizeVideo(v: Record<string, unknown>): VideoResult {
     viewCount: (v.viewCount as number) ?? 0,
     lengthSeconds: (v.lengthSeconds as number) ?? 0,
     publishedText: (v.publishedText as string) ?? "",
+    published: (v.published as number) ?? 0,
   };
 }
 

@@ -63,4 +63,16 @@ function initSchema(db: Database) {
       watched_at INTEGER NOT NULL DEFAULT (unixepoch())
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS channel_subscriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kid_id INTEGER NOT NULL REFERENCES users(id),
+      channel_id TEXT NOT NULL,
+      channel_name TEXT NOT NULL,
+      channel_thumbnail TEXT,
+      subscribed_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(kid_id, channel_id)
+    )
+  `);
 }

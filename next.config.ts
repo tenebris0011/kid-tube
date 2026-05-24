@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
         hostname: "videos.wilsoncode.space",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "videos.wilsoncode.space",
+        port: "3000",
+        pathname: "/**",
+      },
       // Invidious proxies YouTube thumbnails from these domains
       {
         protocol: "https",

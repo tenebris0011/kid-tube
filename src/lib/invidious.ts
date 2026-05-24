@@ -1,4 +1,11 @@
 const BASE = process.env.INVIDIOUS_URL ?? "http://localhost:3000";
+const BASE_HOSTNAME = (() => { try { return new URL(BASE).hostname; } catch { return ""; } })();
+const PORT_STRIP_RE = BASE_HOSTNAME ? new RegExp(`(https?://${BASE_HOSTNAME}):\\d+(/|$)`) : null;
+
+function normalizeThumbUrl(url: string): string {
+  if (!url || !PORT_STRIP_RE) return url;
+  return url.replace(PORT_STRIP_RE, "$1$2");
+}
 
 const channelCache = new Map<string, { videos: VideoResult[]; ts: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
@@ -54,7 +61,21 @@ async function fetchChannelVideosFromApi(channelId: string, page: number): Promi
     }
   } catch { /* fall through to search fallback */ }
 
-  // Fallback: search by channelId, filter to this channel only
+  // Second fallback: shorts endpoint (some channels return playlists from /videos)
+  try {
+    const url = `${BASE}/api/v1/channels/${channelId}/shorts?page=${page}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json() as { videos?: Record<string, unknown>[] } | Record<string, unknown>[];
+      const raw = Array.isArray(data) ? data : (data as { videos?: Record<string, unknown>[] }).videos ?? [];
+      const videos = raw
+        .map(normalizeVideo)
+        .filter((v): v is VideoResult => v !== null);
+      if (videos.length > 0) return videos;
+    }
+  } catch { /* fall through */ }
+
+  // Final fallback: search by channelId, filter to this channel only
   try {
     const url = `${BASE}/api/v1/search?q=${encodeURIComponent(channelId)}&type=video&page=${page}`;
     const res = await fetch(url, { cache: "no-store" });
@@ -95,10 +116,11 @@ function normalizeVideo(v: Record<string, unknown>): VideoResult | null {
   if (!videoId || !channelId) return null;
 
   const thumbs = (v.videoThumbnails as { quality: string; url: string }[]) ?? [];
-  const thumb =
+  const thumb = normalizeThumbUrl(
     thumbs.find((t) => t.quality === "medium")?.url ??
     thumbs[0]?.url ??
-    "";
+    ""
+  );
   return {
     videoId,
     title,

@@ -12,7 +12,7 @@ export default function KidNav({ current }: { current: Page }) {
   }
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between w-full">
       <h1 className="text-red-500 font-bold text-xl">KidTube</h1>
       <nav className="flex gap-4 text-sm text-gray-400">
         {current === "feed" ? (

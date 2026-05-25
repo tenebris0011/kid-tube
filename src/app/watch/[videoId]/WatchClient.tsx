@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import KidNav from "@/components/KidNav";
 
 interface Props {
   embedUrl: string;
@@ -12,7 +12,6 @@ interface Props {
 }
 
 export default function WatchClient({ embedUrl, videoId, videoTitle, channelId, channelName, kidId }: Props) {
-  const router = useRouter();
   const recorded = useRef(false);
 
   useEffect(() => {
@@ -28,19 +27,13 @@ export default function WatchClient({ embedUrl, videoId, videoTitle, channelId, 
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      <div className="flex items-center gap-3 px-4 py-2 bg-gray-900">
-        <button
-          onClick={() => router.back()}
-          className="text-gray-400 hover:text-white transition-colors text-sm"
-        >
-          ← Back
-        </button>
-        <span className="text-red-500 font-bold">KidTube</span>
-      </div>
+      <header className="bg-gray-900 border-b border-gray-800 px-4 py-3">
+        <KidNav current="watch" />
+      </header>
       <iframe
         src={embedUrl}
         className="flex-1 w-full"
-        style={{ minHeight: "calc(100vh - 44px)" }}
+        style={{ minHeight: "calc(100vh - 53px)" }}
         allowFullScreen
         allow="autoplay; fullscreen"
         referrerPolicy="no-referrer"

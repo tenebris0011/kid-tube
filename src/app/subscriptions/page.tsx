@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import KidNav from "@/components/KidNav";
 
 interface Subscription {
   id: number;
@@ -37,12 +38,7 @@ export default function SubscriptionsPage() {
     <div className="min-h-screen bg-gray-950">
       <header className="bg-gray-900 border-b border-gray-800 px-4 pt-3 pb-2 space-y-1">
         <div className="flex items-center justify-between">
-          <h1 className="text-red-500 font-bold text-xl">KidTube</h1>
-          <nav className="flex gap-4 text-sm text-gray-400">
-            <a href="/feed" className="hover:text-white transition-colors">Feed</a>
-            <a href="/search" className="hover:text-white transition-colors">Search</a>
-            <a href="/requests" className="hover:text-white transition-colors">Requests</a>
-          </nav>
+          <KidNav current="feed" />
         </div>
         <h2 className="text-sm font-semibold text-white pb-1">My Channels</h2>
       </header>

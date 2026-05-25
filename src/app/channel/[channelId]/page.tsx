@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import VideoCard, { type VideoCardData } from "@/components/VideoCard";
+import KidNav from "@/components/KidNav";
 
 export default function ChannelPage() {
   const router = useRouter();
@@ -81,12 +82,7 @@ export default function ChannelPage() {
     <div className="min-h-screen bg-gray-950">
       <header className="bg-gray-900 border-b border-gray-800 px-4 pt-3 pb-2 space-y-1">
         <div className="flex items-center justify-between">
-          <h1 className="text-red-500 font-bold text-xl">KidTube</h1>
-          <nav className="flex gap-4 text-sm text-gray-400">
-            <a href="/feed" className="hover:text-white transition-colors">Feed</a>
-            <a href="/search" className="hover:text-white transition-colors">Search</a>
-            <a href="/requests" className="hover:text-white transition-colors">Requests</a>
-          </nav>
+          <KidNav current="feed" />
         </div>
         {channelName && (
           <div className="flex items-center justify-between py-1">

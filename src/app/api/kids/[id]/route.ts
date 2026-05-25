@@ -19,6 +19,7 @@ export async function DELETE(
   if (!kid) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // Delete associated data before removing the account
+  db.run("DELETE FROM channel_subscriptions WHERE kid_id = ?", [id]);
   db.run("DELETE FROM watch_history WHERE kid_id = ?", [id]);
   db.run("DELETE FROM watch_requests WHERE kid_id = ?", [id]);
   db.run("DELETE FROM users WHERE id = ?", [id]);

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import KidNav from "@/components/KidNav";
 
 interface WatchRequest {
   id: number;
@@ -41,12 +42,7 @@ export default function RequestsPage() {
   return (
     <div className="min-h-screen bg-gray-950">
       <header className="bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-red-500 font-bold text-xl">KidTube</h1>
-        <nav className="flex gap-4 text-sm text-gray-400">
-          <a href="/feed" className="hover:text-white transition-colors">Feed</a>
-          <a href="/search" className="hover:text-white transition-colors">Search</a>
-          <span className="text-white font-medium">Requests</span>
-        </nav>
+        <KidNav current="requests" />
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
